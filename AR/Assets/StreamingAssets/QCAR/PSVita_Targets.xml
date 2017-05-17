@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="cartaUNO" size="1.000000 1.573620" />
+    <ImageTarget name="virus1" size="1.000000 1.615276" />
+    <ImageTarget name="Carta1jpeg" size="5.000000 4.968051" />
+    <ImageTarget name="Carta6" size="5.000000 4.961090" />
+    <ImageTarget name="Carta5" size="5.000000 4.961090" />
+    <ImageTarget name="Carta4" size="5.000000 4.961090" />
+    <ImageTarget name="Carta3" size="5.000000 4.961090" />
+    <ImageTarget name="Carta2" size="5.000000 4.961090" />
+    <ImageTarget name="Carta1" size="5.000000 4.961090" />
+  </Tracking>
+</QCARConfig>

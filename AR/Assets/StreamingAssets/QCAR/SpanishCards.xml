@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="2_Oros" size="1.000000 1.657143" />
+    <ImageTarget name="2_Copas" size="1.000000 1.646577" />
+    <ImageTarget name="2_Espadas" size="1.000000 1.691047" />
+    <ImageTarget name="2_Bastos" size="1.000000 1.643564" />
+  </Tracking>
+</QCARConfig>
