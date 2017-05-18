@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum GameState
 {
@@ -19,6 +20,9 @@ public class GameController : MonoBehaviour
     public GameObject resumeButton;
     public GameObject pauseButton;
     public GameObject restartButton;
+    public GameObject pausePanel;
+    public GameObject warning;
+    public Text killCount;
 
     // General Values
     public GameState currentState;
@@ -49,7 +53,6 @@ public class GameController : MonoBehaviour
     private float damage;
 
     // Turrets
-    public GameObject turretBase;
     public TurretController[] turrets;
     private float turretBaseDamage = 100f;
     private float turretBaseAttackSpeed = 10f;
@@ -115,6 +118,11 @@ public class GameController : MonoBehaviour
                 }
             case GameState.PAUSE:
                 {
+                    if (trackingImages[card0])
+                    {
+                        warning.SetActive(false);
+                    }
+
                     break;
                 }
             case GameState.TRANSITION_TO_PAUSE:
@@ -156,11 +164,19 @@ public class GameController : MonoBehaviour
         foreach (EnemyController enemy in enemies)
             Destroy(enemy.gameObject);
         enemies.Clear();
+        
+        trackingImages[card0] = false;
+        trackingImages[card1] = false;
+        trackingImages[card2] = false;
+        trackingImages[card3] = false;
 
-        // Reset turrets
-        foreach (TurretController turret in turrets)
-            turret.SetAllAttributes(this, turretBaseDamage, turretBaseAttackSpeed, turretBaseRange);
+        enemyBaseHealth = 500f;
+        enemyBaseAttackSpeed = 1f;
+        enemyBaseSpeed = 15f;
 
+        turretBaseDamage = 100f;
+        turretBaseAttackSpeed = 2.2f;
+        turretBaseRange = 100f;
 
         damage = 10f;
 
@@ -169,45 +185,48 @@ public class GameController : MonoBehaviour
         nexusHealth = nexusMaxHealth = 100f;
         spawnTimer = 100f;
         spawnFrequency = 1f;
+
+
+        // Reset turrets
+        foreach (TurretController turret in turrets)
+            turret.SetAllAttributes(this, turretBaseDamage, turretBaseAttackSpeed, turretBaseRange);
     }
 
 
     private void HandleLoop()
     {
         // handle cards
-        if (trackingImages[card0])
+        if (!trackingImages[card0])
         {
-
+            Pause();
+            warning.SetActive(true);
         }
-        else
-        {
 
-        }
         if (trackingImages[card1])
         {
-            Vector3 pos = track1.transform.position;
-            pos.y = turretBase.transform.position.y;
-            turrets[0].transform.position = pos;
+            float originalY = turrets[0].transform.localPosition.y;
+            turrets[0].transform.position = track1.transform.position;
+            Vector3 pos = turrets[0].transform.localPosition;
+            pos.y = originalY;
+            turrets[0].transform.localPosition = pos;
         }
-        else
-        {
 
-        }
         if (trackingImages[card2])
         {
-
+            float originalY = turrets[1].transform.localPosition.y;
+            turrets[1].transform.position = track1.transform.position;
+            Vector3 pos = turrets[0].transform.localPosition;
+            pos.y = originalY;
+            turrets[1].transform.localPosition = pos;
         }
-        else
-        {
 
-        }
         if (trackingImages[card3])
         {
-
-        }
-        else
-        {
-
+            float originalY = turrets[2].transform.localPosition.y;
+            turrets[2].transform.position = track1.transform.position;
+            Vector3 pos = turrets[0].transform.localPosition;
+            pos.y = originalY;
+            turrets[2].transform.localPosition = pos;
         }
 
 
@@ -263,8 +282,6 @@ public class GameController : MonoBehaviour
 
     public void UpdateTrackingImageStates(string name, bool state)
     {
-        //Debug.Log("GAMECONTROLLER RECIEVED: " + name + " was: " + state);
-
         bool cardActive;
         if (trackingImages.TryGetValue(name, out cardActive))
         {
@@ -318,6 +335,7 @@ public class GameController : MonoBehaviour
         pauseButton.SetActive(false);
         resumeButton.SetActive(true);
         restartButton.SetActive(true);
+        pausePanel.SetActive(true);
         currentState = GameState.TRANSITION_TO_PAUSE;
         tickSkipped = false;
     }
