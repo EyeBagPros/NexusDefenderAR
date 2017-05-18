@@ -15,6 +15,13 @@ public class ProjectileController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
+
+        if (gc.GetState() == GameState.MENU)
+            Destroy(gameObject);
+        else if (gc.GetState() != GameState.PLAY)
+            return;
+
+
         timer += Time.deltaTime;
         if(timer > 5f) // destroy projectile after 15 seconds
         {
