@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
-    // Enemy Prefab
     public GameObject baseEnemy;
 
     /* Instanciates Enemy
@@ -12,7 +11,7 @@ public class EnemySpawner : MonoBehaviour
     nexusRadius is the width of the nexus from wich to set the target to move and attack
     scale is used to standarize values
     angle determines where from the nexus the enemy spawns the distance given*/
-    public GameObject SpawnEnemy(float distance, float nexusRadius, float scale, float angle)
+    public EnemyController SpawnEnemy(float distance, float nexusRadius, float scale, float angle)
     {
         GameObject copy = Instantiate(baseEnemy, baseEnemy.transform.position, baseEnemy.transform.rotation, transform);
         copy.SetActive(true);
@@ -25,6 +24,6 @@ public class EnemySpawner : MonoBehaviour
         goblin.transform.Translate(Vector3.forward * distance * scale);
         goblin.transform.Rotate(0f, 180, 0f);
 
-        return copy;
+        return ec;
     }
 }

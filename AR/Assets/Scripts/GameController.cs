@@ -35,31 +35,41 @@ public class GameController : MonoBehaviour
     private int currentWave;
 
     // Enemy Spawning
-    private List<GameObject> enemies;
-    public EnemySpawner spawner;
+    private List<EnemyController> enemies;
+    public EnemySpawner enemySpawner;
     private float spawnTimer;
     private float spawnFrequency;
+
+    // Enemy Stats
+    private float enemyBaseHealth = 500f;
+    private float enemyBaseAttackSpeed = 1f;
+    private float enemyBaseSpeed = 25f;
 
     // Player
     private float damage;
 
     // Turrets
+    public GameObject turretBase;
     public TurretController[] turrets;
-    private float turretBaseDamage = 10f;
-    private float turretBaseAttackSpeed = 1f;
-    private float turretBaseRange = 50f;
+    private float turretBaseDamage = 100f;
+    private float turretBaseAttackSpeed = 10f;
+    private float turretBaseRange = 100f;
 
     // Projectiles & Explosions
     private float projectileSpeed;
-    public GameObject projectileBase;
-    public GameObject projectileHolder;
-    public GameObject explosionBase;
-    public GameObject explosionHolder;
+    public ProjectileSpawner projectileSpawner;
+    public ExplosionSpawner explosionSpawner;
 
     // Tracking resources
     private Dictionary<string, bool> trackingImages;
-    private string mainCard;
+    private string card0;
     private string card1;
+    private string card2;
+    private string card3;
+    public GameObject track1;
+    public GameObject track2;
+    public GameObject track3;
+
 
     // Camera
     public Camera cam;
@@ -67,14 +77,18 @@ public class GameController : MonoBehaviour
 
     void Start ()
     {
-        enemies = new List<GameObject>();
+        enemies = new List<EnemyController>();
 
-        mainCard = "cartaUNO";
-        card1 = "carta2";
+        card0 = "cartaUNO";
+        card1 = "virus1";
+        card2 = "body";
+        card3 = "kit";
         trackingImages = new Dictionary<string, bool>();
-        trackingImages.Add(mainCard, false);
+        trackingImages.Add(card0, false);
         trackingImages.Add(card1, false);
-        
+        trackingImages.Add(card2, false);
+        trackingImages.Add(card3, false);
+
         Restart();
 }
 	
@@ -139,8 +153,8 @@ public class GameController : MonoBehaviour
         restartButton.SetActive(false);
 
         // Clean enemies
-        foreach (GameObject enemy in enemies)
-            Destroy(enemy);
+        foreach (EnemyController enemy in enemies)
+            Destroy(enemy.gameObject);
         enemies.Clear();
 
         // Reset turrets
@@ -151,57 +165,87 @@ public class GameController : MonoBehaviour
         damage = 10f;
 
         currentWave = 0;
-
+        projectileSpeed = 25f;
         nexusHealth = nexusMaxHealth = 100f;
         spawnTimer = 100f;
-        spawnFrequency = 20f;
+        spawnFrequency = 1f;
     }
 
 
     private void HandleLoop()
     {
+        // handle cards
+        if (trackingImages[card0])
+        {
+
+        }
+        else
+        {
+
+        }
+        if (trackingImages[card1])
+        {
+            Vector3 pos = track1.transform.position;
+            pos.y = turretBase.transform.position.y;
+            turrets[0].transform.position = pos;
+        }
+        else
+        {
+
+        }
+        if (trackingImages[card2])
+        {
+
+        }
+        else
+        {
+
+        }
+        if (trackingImages[card3])
+        {
+
+        }
+        else
+        {
+
+        }
+
+
+
         spawnTimer += Time.deltaTime;
         if (spawnTimer >= spawnFrequency)
         {
             spawnTimer = 0f;
-
-            float distance = 80f;
-            float nexusRadius = Vector3.Distance(nexus.transform.position, nexusEdge.transform.position);
-            float angle = Mathf.Rad2Deg * Random.Range(0f, Mathf.PI * 2f);
-
-            angle = 0f;
-
-            enemies.Add(spawner.SpawnEnemy(distance, nexusRadius, scale, angle));
+            SpawnEnemy();
         }
     }
 
+    // Enemy Spawn ===================================================
 
-    // Projectiles ===================================================
-
-    public void SpawnProjectile(Transform shooter, GameObject target, float d)
+    private void SpawnEnemy()
     {
-        GameObject proj = Instantiate(projectileBase, projectileHolder.transform, false);
+        float distance = 80f;
+        float nexusRadius = Vector3.Distance(nexus.transform.position, nexusEdge.transform.position);
+        float angle = Mathf.Rad2Deg * Random.Range(0f, Mathf.PI * 2f);
 
-        proj.transform.position = shooter.position;
+        //angle = 0f;
 
-        if (target == null) // player shot
-        {
-            proj.transform.rotation = cam.transform.rotation;
-        }
-        else // turret shot
-        {
-            Vector3 pos = proj.transform.position;
-            pos += proj.transform.up * proj.transform.localScale.y;
-            proj.transform.position = pos;
-        }
+        EnemyController enemy = enemySpawner.SpawnEnemy(distance, nexusRadius, scale, angle);
+        enemy.SetAtt(enemyBaseHealth, enemyBaseAttackSpeed, enemyBaseSpeed);
+        enemies.Add(enemy);
+    }
 
-        ProjectileController pc = proj.GetComponent<ProjectileController>();
-        pc.SetAttributes(this, projectileSpeed, target, d);
+    // Projectiles & Explosions ===================================================
+
+    public void SpawnProjectile(Transform shooter, EnemyController target, float d)
+    {
+        ProjectileController proj = projectileSpawner.SpawnProjectile(shooter, target);
+        proj.SetAttributes(this, projectileSpeed, target, d);
     }
 
     public void SpawnExplosion(Transform t)
     {
-        //Instantiate(explosionBase, explosionHolder.transform, false);
+        explosionSpawner.SpawnExplosion(t);
     }
 
 
@@ -224,7 +268,10 @@ public class GameController : MonoBehaviour
         bool cardActive;
         if (trackingImages.TryGetValue(name, out cardActive))
         {
-            
+            if(cardActive != state)
+            {
+                trackingImages[name] = state;
+            }
         }
         else
         {
@@ -232,25 +279,18 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public GameObject GetClosestTarget(Transform turret, float range)
+    public EnemyController GetClosestTarget(Transform turret, float range)
     {
-        Debug.Log("REQUEST NEW TARGET");
-        GameObject ret = null;
+        EnemyController ret = null;
 
         float closestDistance = range;
         float distance = 0f;
 
-        foreach (GameObject enemy in enemies)
+        foreach (EnemyController enemy in enemies)
         {
-            EnemyController ec = enemy.GetComponentInChildren<EnemyController>();
-
-            if(ec == null)
-                Debug.Log("TARGET HAS NO CONTROLLER: ");
-
-            if (ec != null && ec.Targetable())
+            if (enemy.Targetable())
             {
                 distance = Vector3.Distance(enemy.transform.position, turret.position);
-                Debug.Log("TARGETABLE TARGET AT: " + distance.ToString());
 
                 if (distance <= closestDistance)
                 {

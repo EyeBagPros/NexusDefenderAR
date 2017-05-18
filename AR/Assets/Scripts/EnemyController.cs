@@ -11,10 +11,14 @@ public class EnemyController : MonoBehaviour
     // Animation Component
     private Animation anim;
 
-    // Health
-    public float currentHealth = 5f;
-    private float maxHealth = 5f;
-    private float corpeDuration = 10f;
+    // Stats
+    public float currentHealth = 500f;
+    private float maxHealth = 500f;
+    private float attackSpeed = 1f;
+    private float speed = 25f;
+    private float corpeDuration = 5f;
+
+    // Health Bar
     public GameObject healthBarGreen;
     public GameObject healthBarRed;
     public GameObject healthBarCenter;
@@ -23,9 +27,7 @@ public class EnemyController : MonoBehaviour
     // Movement
     public GameObject target;
     public GameObject floor;
-    private float speed = 25f;
     private float reachingDist = 5f;
-    private float attackSpeed = 1f;
     private float attackTimer = 0f;
     private bool moving;
     private Vector3 localDestination;
@@ -125,7 +127,7 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter(Collider other)
+    /*void OnTriggerEnter(Collider other)
     {
         if (other.tag == "Bullet")
         {
@@ -133,7 +135,7 @@ public class EnemyController : MonoBehaviour
             gc.SpawnExplosion(other.transform);
             Destroy(other.gameObject);
         }
-    }
+    }*/
 
     public void Hit(float damage)
     {
@@ -154,6 +156,13 @@ public class EnemyController : MonoBehaviour
         target.transform.Translate(Vector3.forward * nexusRadius * scale);
         target.transform.Rotate(0f, 180, 0f);
     }
+
+    public void SetAtt(float h, float a, float s)
+    {
+        currentHealth = maxHealth = h;
+        attackSpeed = a;
+        speed = s;
+}
 
     public bool Targetable()
     {

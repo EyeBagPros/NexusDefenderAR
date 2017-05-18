@@ -7,7 +7,7 @@ public class TurretController : MonoBehaviour
     private GameController gc;
 
     // Stats
-    private GameObject target;
+    private EnemyController target;
     public float damage;
     public float attackSpeed;
     public float range;
@@ -42,10 +42,9 @@ public class TurretController : MonoBehaviour
         attackTimer += Time.deltaTime;
         if (attackTimer >= (1f / attackSpeed))
         {
-            EnemyController ec = target.GetComponentInChildren<EnemyController>();
-            if (ec.Targetable())
+            if (target.Targetable())
             {
-                ec.incomingDamage += damage;
+                target.incomingDamage += damage;
                 attackTimer -= (1f / attackSpeed);
                 gc.SpawnProjectile(transform, target, damage);
             }

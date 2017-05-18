@@ -5,10 +5,12 @@ using UnityEngine;
 public class ProjectileController : MonoBehaviour
 {
     private GameController gc;
-    private GameObject target;
+    private EnemyController target;
     private float speed;
     private float timer;
+    private float reachingDistance = 0.5f;
     public float damage;
+
 
 	// Update is called once per frame
 	void Update ()
@@ -19,23 +21,26 @@ public class ProjectileController : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if(target == null) // player shot
-        {
-            Vector3 currentPos = transform.position;
-            currentPos += transform.forward * speed * Time.deltaTime * gc.GetScale();
-            transform.position = currentPos;
-        }
-        else // turret shot
-        {
+        if(target != null) // turret shot
             transform.LookAt(target.transform);
 
-            Vector3 currentPos = transform.position;
-            currentPos += transform.forward * speed * Time.deltaTime * gc.GetScale();
-            transform.position = currentPos;
-        }
-	}
+        Vector3 currentPos = transform.position;
+        currentPos += transform.forward * speed * Time.deltaTime * gc.GetScale();
+        transform.position = currentPos;
 
-    public void SetAttributes(GameController g, float s, GameObject t, float d)
+        if (target != null) // turret shot
+        {
+            float distance = Vector3.Distance(target.transform.position, transform.position);
+            if(distance < reachingDistance * gc.GetScale())
+            {
+                target.GetComponent<EnemyController>().Hit(damage);
+                gc.SpawnExplosion(target.transform);
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    public void SetAttributes(GameController g, float s, EnemyController t, float d)
     {
         gc = g;
         speed = s;
