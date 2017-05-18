@@ -12,26 +12,26 @@ public class EnemyController : MonoBehaviour
     private Animation anim;
 
     // Health
+    public float currentHealth = 5f;
     private float maxHealth = 5f;
-    private float currentHealth = 5f;
     private float corpeDuration = 10f;
     public GameObject healthBarGreen;
     public GameObject healthBarRed;
     public GameObject healthBarCenter;
     public GameObject cam;
-
-
+    
     // Movement
     public GameObject target;
     public GameObject floor;
-    private float speed = 5f;
+    private float speed = 25f;
     private float reachingDist = 5f;
     private float attackSpeed = 1f;
     private float attackTimer = 0f;
     private bool moving;
-    private Vector3 currentPos;
-    private Vector3 destination;
     private Vector3 localDestination;
+
+    // Turret
+    public float incomingDamage = 0f;
 
     void Start ()
     {
@@ -56,14 +56,16 @@ public class EnemyController : MonoBehaviour
         {
             case GameState.TRANSITION_TO_PAUSE:
                 {
-                    anim.PlayQueued("idle", QueueMode.PlayNow, PlayMode.StopAll);
-                    moving = false;
+                    foreach (AnimationState state in anim)
+                        state.speed = 0f;
+
                     break;
                 }
             case GameState.TRANSITION_TO_PLAY:
                 {
-                    moving = true;
-                    attackTimer = 0f;
+                    foreach (AnimationState state in anim)
+                        state.speed = 1f;
+
                     break;
                 }
             case GameState.PLAY:
@@ -86,7 +88,6 @@ public class EnemyController : MonoBehaviour
         if (localDestination != target.transform.localPosition)
         {
             localDestination = target.transform.localPosition;
-            //destination = target.transform.position;
             moving = true;
         }
 
@@ -124,10 +125,20 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Bullet")
+        {
+            Hit(other.GetComponent<ProjectileController>().damage);
+            gc.SpawnExplosion(other.transform);
+            Destroy(other.gameObject);
+        }
+    }
 
     public void Hit(float damage)
     {
-        currentHealth -= Time.deltaTime;
+        incomingDamage -= damage;
+        currentHealth -= damage;
         if (currentHealth <= 0f)
         {
             anim.PlayQueued("death", QueueMode.PlayNow, PlayMode.StopAll);
@@ -137,9 +148,16 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void SetTarget(Vector3 position)
+    public void SetTarget(float nexusRadius, float scale, float angle)
     {
-        target.transform.position = position;
+        target.transform.Rotate(0f, angle, 0f);
+        target.transform.Translate(Vector3.forward * nexusRadius * scale);
+        target.transform.Rotate(0f, 180, 0f);
+    }
+
+    public bool Targetable()
+    {
+        return incomingDamage < currentHealth;
     }
 
     private void UpdateHealthBars()
@@ -177,11 +195,9 @@ public class EnemyController : MonoBehaviour
         LookAtTarget();
 
         // move
-        currentPos = transform.position;
+        Vector3 currentPos = transform.position;
         currentPos += transform.forward * speed * Time.deltaTime * gc.GetScale();
         transform.position = currentPos;
-
-        //Debug.Log("Moved" + (speed * Time.deltaTime * gc.GetScale()).ToString());
     }
 
     private void LookAtTarget()
@@ -190,7 +206,6 @@ public class EnemyController : MonoBehaviour
         Vector3 lookPos = target.transform.position - transform.position;
         transform.rotation = Quaternion.LookRotation(lookPos, floor.transform.up);
     }
-
 
     private void Attack()
     {
@@ -208,7 +223,6 @@ public class EnemyController : MonoBehaviour
 
         moving = true;
         localDestination = target.transform.localPosition;
-        //destination = target.transform.position;
         attackTimer = 0f;
     }
 

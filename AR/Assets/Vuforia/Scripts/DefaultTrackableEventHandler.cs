@@ -17,13 +17,14 @@ namespace Vuforia
         #region PRIVATE_MEMBER_VARIABLES
  
         private TrackableBehaviour mTrackableBehaviour;
-    
+
         #endregion // PRIVATE_MEMBER_VARIABLES
 
+        public GameController gc = null;
 
 
         #region UNTIY_MONOBEHAVIOUR_METHODS
-    
+
         void Start()
         {
             mTrackableBehaviour = GetComponent<TrackableBehaviour>();
@@ -83,7 +84,10 @@ namespace Vuforia
                 component.enabled = true;
             }
 
-            Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " found");
+            //Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " found");
+
+            if (gc != null)
+                gc.UpdateTrackingImageStates(mTrackableBehaviour.TrackableName, true);
         }
 
 
@@ -104,7 +108,10 @@ namespace Vuforia
                 component.enabled = false;
             }
 
-            Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " lost");
+            //Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " lost");
+
+            if(gc != null)
+                gc.UpdateTrackingImageStates(mTrackableBehaviour.TrackableName, false);
         }
 
         #endregion // PRIVATE_METHODS

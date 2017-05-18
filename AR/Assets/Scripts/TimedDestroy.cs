@@ -6,13 +6,8 @@ public class TimedDestroy : MonoBehaviour
 {
     public GameController gc = null;
 
-    private float timer;
-    private float timeTillDeath;
-
-    void Start ()
-    {
-        timeTillDeath = timer = 0f;
-	}
+    private float timer = 0f;
+    private float timeTillDeath = 0f;
 	
 	void Update ()
     {
