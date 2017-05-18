@@ -9,7 +9,7 @@ public enum GameState
     TRANSITION_TO_PLAY,
     PAUSE,
     TRANSITION_TO_PAUSE,
-    TARGET_NOT_FOUND,
+    END,
     MENU
 }
 
@@ -17,17 +17,22 @@ public class GameController : MonoBehaviour
 {
     // UI
     public GameObject startButton;
+    public GameObject startPanel;
     public GameObject resumeButton;
     public GameObject pauseButton;
     public GameObject restartButton;
     public GameObject pausePanel;
     public GameObject warning;
-    public Text killCount;
+    public GameObject deathPanel;
+    public Text EndCount;
+    public Text killCountLabel;
+    public Image nexusLife;
 
     // General Values
     public GameState currentState;
     private bool tickSkipped;
     private float scale;
+
 
     // Nexus
     public GameObject nexus;
@@ -37,6 +42,7 @@ public class GameController : MonoBehaviour
 
     //Waves
     private int currentWave;
+    private int killCount;
 
     // Enemy Spawning
     private List<EnemyController> enemies;
@@ -48,6 +54,7 @@ public class GameController : MonoBehaviour
     private float enemyBaseHealth = 500f;
     private float enemyBaseAttackSpeed = 1f;
     private float enemyBaseSpeed = 25f;
+    private float enemyBaseDamage = 10f;
 
     // Player
     private float damage;
@@ -72,8 +79,7 @@ public class GameController : MonoBehaviour
     public GameObject track1;
     public GameObject track2;
     public GameObject track3;
-
-
+    
     // Camera
     public Camera cam;
 
@@ -104,7 +110,8 @@ public class GameController : MonoBehaviour
         {
             case GameState.PLAY:
                 {
-                    HandleLoop();
+                    if (nexusHealth > 0f)
+                        HandleLoop();
                     break;
                 }
             case GameState.TRANSITION_TO_PLAY:
@@ -134,10 +141,6 @@ public class GameController : MonoBehaviour
 
                     break;
                 }
-            case GameState.MENU:
-                {
-                    break;
-                }
             default: return;
         }
 	}
@@ -156,9 +159,13 @@ public class GameController : MonoBehaviour
         // Reset UI to menu
         currentState = GameState.MENU;
         startButton.SetActive(true);
+        startPanel.SetActive(true);
         resumeButton.SetActive(false);
         pauseButton.SetActive(false);
         restartButton.SetActive(false);
+        deathPanel.SetActive(false);
+        nexusLife.transform.parent.gameObject.SetActive(false);
+        nexusLife.fillAmount = 1f;
 
         // Clean enemies
         foreach (EnemyController enemy in enemies)
@@ -178,11 +185,11 @@ public class GameController : MonoBehaviour
         turretBaseAttackSpeed = 2.2f;
         turretBaseRange = 100f;
 
-        damage = 10f;
+        damage = 300f;
 
         currentWave = 0;
         projectileSpeed = 25f;
-        nexusHealth = nexusMaxHealth = 100f;
+        nexusHealth = nexusMaxHealth = 1000f;
         spawnTimer = 100f;
         spawnFrequency = 1f;
 
@@ -214,8 +221,8 @@ public class GameController : MonoBehaviour
         if (trackingImages[card2])
         {
             float originalY = turrets[1].transform.localPosition.y;
-            turrets[1].transform.position = track1.transform.position;
-            Vector3 pos = turrets[0].transform.localPosition;
+            turrets[1].transform.position = track2.transform.position;
+            Vector3 pos = turrets[1].transform.localPosition;
             pos.y = originalY;
             turrets[1].transform.localPosition = pos;
         }
@@ -223,11 +230,29 @@ public class GameController : MonoBehaviour
         if (trackingImages[card3])
         {
             float originalY = turrets[2].transform.localPosition.y;
-            turrets[2].transform.position = track1.transform.position;
-            Vector3 pos = turrets[0].transform.localPosition;
+            turrets[2].transform.position = track3.transform.position;
+            Vector3 pos = turrets[2].transform.localPosition;
             pos.y = originalY;
             turrets[2].transform.localPosition = pos;
         }
+
+
+        if(Input.touchCount > 0)
+        {
+            Vector3 aim = cam.transform.forward;
+            aim.x = Input.GetTouch(0).position.x;
+            aim.y = Input.GetTouch(0).position.y;
+
+            ProjectileController proj = projectileSpawner.SpawnProjectile(cam.transform, aim, scale);
+            proj.SetAttributes(this, projectileSpeed, null, damage);
+        }
+        else if(Input.GetMouseButtonDown(0))
+        {
+            ProjectileController proj = projectileSpawner.SpawnProjectile(cam.transform, Input.mousePosition, scale);
+            proj.SetAttributes(this, projectileSpeed, null, damage);
+        }
+
+
 
 
 
@@ -250,7 +275,7 @@ public class GameController : MonoBehaviour
         //angle = 0f;
 
         EnemyController enemy = enemySpawner.SpawnEnemy(distance, nexusRadius, scale, angle);
-        enemy.SetAtt(enemyBaseHealth, enemyBaseAttackSpeed, enemyBaseSpeed);
+        enemy.SetAtt(enemyBaseHealth, enemyBaseAttackSpeed, enemyBaseSpeed, enemyBaseDamage);
         enemies.Add(enemy);
     }
 
@@ -265,6 +290,32 @@ public class GameController : MonoBehaviour
     public void SpawnExplosion(Transform t)
     {
         explosionSpawner.SpawnExplosion(t);
+    }
+
+    public void AddKill()
+    {
+        killCount += 1;
+        killCountLabel.text = killCount.ToString();
+    }
+
+    public void HitNexus(float d)
+    {
+        nexusHealth -= d;
+        nexusLife.fillAmount = nexusHealth / nexusMaxHealth;
+
+        if(nexusHealth <= 0f)
+        {
+            pauseButton.SetActive(false);
+            killCountLabel.transform.parent.gameObject.SetActive(false);
+            deathPanel.SetActive(true);
+            EndCount.text = killCount.ToString();
+            currentState = GameState.MENU;
+        }
+    }
+
+    public void RemoveEnemy(EnemyController ec)
+    {
+        enemies.Remove(ec);
     }
 
 
@@ -325,10 +376,13 @@ public class GameController : MonoBehaviour
     public void StartGame()
     {
         startButton.SetActive(false);
-        pauseButton.SetActive(true);
+        nexusLife.transform.parent.gameObject.SetActive(true);
         currentState = GameState.TRANSITION_TO_PLAY;
         tickSkipped = false;
-}
+
+        killCount = 0;
+        killCountLabel.text = killCount.ToString();
+    }
 
     public void Pause()
     {
@@ -357,5 +411,10 @@ public class GameController : MonoBehaviour
         startButton.SetActive(true);
         tickSkipped = false;
         Restart();
+    }
+
+    public void Exit()
+    {
+        Application.Quit();
     }
 }

@@ -16,6 +16,7 @@ public class EnemyController : MonoBehaviour
     private float maxHealth = 500f;
     private float attackSpeed = 1f;
     private float speed = 25f;
+    private float damage = 1f;
     private float corpeDuration = 5f;
 
     // Health Bar
@@ -75,6 +76,12 @@ public class EnemyController : MonoBehaviour
                     HandleUnit();
                     break;
                 }
+            case GameState.MENU:
+                {
+                    gc.RemoveEnemy(this);
+                    Destroy(transform.parent.gameObject);
+                    break;
+                }
             default: return;
         }
 	}
@@ -118,7 +125,7 @@ public class EnemyController : MonoBehaviour
                 if (attackTimer > 1f)
                 {
                     // trigger damage nexus =====================================================================
-                    Debug.Log("Nexus Hit");
+                    gc.HitNexus(damage);
                     attackTimer = 0f;
                 }
 
@@ -127,7 +134,7 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /*void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other)
     {
         if (other.tag == "Bullet")
         {
@@ -135,7 +142,7 @@ public class EnemyController : MonoBehaviour
             gc.SpawnExplosion(other.transform);
             Destroy(other.gameObject);
         }
-    }*/
+    }
 
     public void Hit(float damage)
     {
@@ -143,10 +150,12 @@ public class EnemyController : MonoBehaviour
         currentHealth -= damage;
         if (currentHealth <= 0f)
         {
+            gc.AddKill();
             anim.PlayQueued("death", QueueMode.PlayNow, PlayMode.StopAll);
             healthBarGreen.SetActive(false);
             healthBarRed.SetActive(false);
             transform.parent.GetComponent<TimedDestroy>().DestroyIn(corpeDuration);
+            gc.RemoveEnemy(this);
         }
     }
 
@@ -157,11 +166,12 @@ public class EnemyController : MonoBehaviour
         target.transform.Rotate(0f, 180, 0f);
     }
 
-    public void SetAtt(float h, float a, float s)
+    public void SetAtt(float h, float a, float s, float d)
     {
         currentHealth = maxHealth = h;
         attackSpeed = a;
         speed = s;
+        damage = d;
 }
 
     public bool Targetable()

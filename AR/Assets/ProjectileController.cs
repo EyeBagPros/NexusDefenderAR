@@ -45,6 +45,18 @@ public class ProjectileController : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+        else
+        {
+            EnemyController ec = gc.GetClosestTarget(transform, 10f);
+            if (ec != null)
+            {
+                Debug.Log("MANUAL HIT");
+                ec.Hit(damage);
+                gc.SpawnExplosion(transform);
+                Destroy(gameObject);
+            }
+
+        }
     }
 
     public void SetAttributes(GameController g, float s, EnemyController t, float d)
